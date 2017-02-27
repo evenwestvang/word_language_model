@@ -1,0 +1,103 @@
+
+Skipped 146918 lines.
+Included 3785398 lines.
+
+
+
+Notes
+
+- 60k tokens
+
+------------------------------------------
+*run_01*
+
+
+CUDA_VISIBLE_DEVICES=0 python main.py --data ./data/local --model LSTM --nlayers 3 --nhid 512 --cuda --epochs 10 --save models/local/local_model
+
+
+stable-ish at epoch 2 / at 4.2
+
+| epoch  10 | 79800/79967 batches | lr 0.02 | ms/batch 52.29 | loss  4.07 | ppl    58.48
+-----------------------------------------------------------------------------------------
+| end of epoch  10 | time: 4535.49s | valid loss  7.64 | valid ppl  2083.24
+
+
+
+------------------------------------------
+*run_02* - bigger model / include ~ tokens to separate sentences
+
+CUDA_VISIBLE_DEVICES=0 python main.py --data ./data/local --model LSTM --nlayers 3 --nhid 2048 --cuda --epochs 10 --save models/local/local_model
+
+| epoch   1 | 15400/83181 batches | lr 20.00 | ms/batch 189.64 | loss  4.70 | ppl   110.01
+
+* break *
+
+
+------------------------------------------
+*run_03* - smaller model / include ~ tokens to separate sentences
+
+CUDA_VISIBLE_DEVICES=0 python main.py --data ./data/local --model LSTM --nlayers 3 --nhid 512 --cuda --epochs 10 --save models/local/local_model
+
+| epoch   2 | 44000/83181 batches | lr 20.00 | ms/batch 52.58 | loss  4.39 | ppl    80.83
+| epoch   2 | 44200/83181 batches | lr 20.00 | ms/batch 52.56 | loss  4.36 | ppl    78.60
+| epoch   2 | 44400/83181 batches | lr 20.00 | ms/batch 52.53 | loss  4.39 | ppl    80.85
+| epoch   2 | 44600/83181 batches | lr 20.00 | ms/batch 52.52 | loss  4.34 | ppl    76.96
+
+
+------------------------------------------
+*run_04* - much smaller model / small embedding /
+
+CUDA_VISIBLE_DEVICES=0 python main.py --data ./data/local --model LSTM --nlayers 2 --nhid 256 --cuda --epochs 10 --save models/local/local_model --emsize 50
+
+| epoch   1 | 56600/83181 batches | lr 20.00 | ms/batch 28.61 | loss  4.66 | ppl   106.02
+| epoch   1 | 56800/83181 batches | lr 20.00 | ms/batch 28.92 | loss  4.71 | ppl   110.56
+| epoch   1 | 57000/83181 batches | lr 20.00 | ms/batch 28.80 | loss  4.65 | ppl   104.54
+| epoch   1 | 57200/83181 batches | lr 20.00 | ms/batch 28.90 | loss  4.74 | ppl   114.61
+
+!!!!!!!
+
+Number of tokens in total 3975803
+Skipped 146919 lines.
+Included 446815 lines.
+Number of tokens: 60000
+
+--------------------
+
+*run_05* - 500k tokens! / normal model / slightly larger embedding /
+
+
+CUDA_VISIBLE_DEVICES=0 python main.py --data ./data/local --model LSTM --nlayers 3 --nhid 512 --cuda --epochs 10 --save models/local/local_model --emsize 300
+
+| epoch   4 | 25600/166167 batches | lr 1.25 | ms/batch 184.22 | loss  4.47 | ppl    86.98
+| epoch   4 | 25800/166167 batches | lr 1.25 | ms/batch 184.25 | loss  4.42 | ppl    82.76
+| epoch   4 | 26000/166167 batches | lr 1.25 | ms/batch 184.22 | loss  4.46 | ppl    86.52
+| epoch   4 | 26200/166167 batches | lr 1.25 | ms/batch 184.26 | loss  4.53 | ppl    92.44
+| epoch   4 | 26400/166167 batches | lr 1.25 | ms/batch 184.31 | loss  4.49 | ppl    89.28
+
+
+CUDA_VISIBLE_DEVICES=0 python generate.py --data ./data/local --checkpoint ./models/local/local_model.pt --cuda --temperature 1.0
+
+---
+
+*run_06* - 500k tokens! / 2 layers / fewer hidden / slightly smaller embedding / tweak model / dropout on RNN / scale embedding by freq
+
+split and check individual sentences!
+go down to 30k sentences.
+
+CUDA_VISIBLE_DEVICES=0 python main.py --data ./data/local --model LSTM --nlayers 2 --nhid 256 --cuda --epochs 6 --save models/local/local_model --emsize 200
+
+| epoch   6 | 101800/102319 batches | lr 0.08 | ms/batch 26.44 | loss  4.32 | ppl    75.28
+| epoch   6 | 102000/102319 batches | lr 0.08 | ms/batch 26.46 | loss  4.28 | ppl    71.92
+| epoch   6 | 102200/102319 batches | lr 0.08 | ms/batch 26.48 | loss  4.31 | ppl    74.23
+-----------------------------------------------------------------------------------------
+| end of epoch   6 | time: 3152.17s | valid loss  7.58 | valid ppl  1952.80
+
+model:
+scale_grad_by_freq=True <- embedding, smaller curvature for less frequent words
+dropout=True <- RNN
+
+-----
+
+runs on slopoke
+
+*run_06*
