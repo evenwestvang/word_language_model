@@ -62,7 +62,7 @@ input = Variable(torch.rand(1, 1).mul(ntokens).long(), volatile=True)
 if args.cuda:
     input.data = input.data.cuda()
 
-with open(args.outf, 'w') as outf:
+with open(args.outf, 'w', encoding="utf-8") as outf:
     for i in range(args.words):
         output, hidden = model(input, hidden)
         word_weights = output.squeeze().data.div(args.temperature).exp().cpu()

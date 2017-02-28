@@ -75,9 +75,9 @@ class Corpus(object):
 
       if os.path.exists(os.path.join(path, 'dictionary.json')):
         # load dictionary
-        print("We should load the dictionary here")
+        print("Loading dictionary")
 
-        with h5py.File(os.path.join(path, 'indexed.hdf'),'r') as f:
+        with h5py.File(os.path.join(path, 'indexed.hdf'),'r', encoding="utf-8") as f:
           dset = f['indexes']
           indexed_lines = torch.LongTensor(dset[...])
 
@@ -103,7 +103,7 @@ class Corpus(object):
           dset = f.create_dataset('indexes', (cnt,), dtype='int64')
           dset[...] = indexed_lines.numpy()
 
-        with open(os.path.join(path, 'dictionary.json'), 'w') as f:
+        with open(os.path.join(path, 'dictionary.json'), 'w', encoding="utf-8") as f:
           json.dump(self.dictionary.idx2word, f)
 
       cnt = len(indexed_lines)
@@ -118,13 +118,17 @@ class Corpus(object):
 
 
     def lines_to_tokens(self, path):
-      with open(os.path.join(path, 'data.txt'), 'r') as f:
+      with open(os.path.join(path, 'data.txt'), 'r', encoding="utf-8") as f:
         print("Tokenizing")
         tokenized_sentences = []
 
         lineCnt = 0
 
         for line in f:
+
+          lineCnt += 1
+          # if lineCnt > 300:
+          #   break
 
           # flatten punctuation
           line = re.sub(r'(\W)(?=\1)', '', line).lower()
@@ -234,7 +238,7 @@ class Corpus(object):
 
     def loadStems(self, path):
       print("Loading morphemes")
-      with open(os.path.join(path, 'fullform_bm.txt'), 'r') as f:
+      with open(os.path.join(path, 'fullform_bm.txt'), 'r', encoding="utf-8") as f:
         for line in f:
           columns = line.split("\t")
           if len(columns) > 2:
