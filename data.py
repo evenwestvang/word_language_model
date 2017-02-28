@@ -1,12 +1,21 @@
 import os
 import torch
 import re
+import math
+import h5py, json
+
+TOKENCOUNT = 30000
 
 class Dictionary(object):
-    def __init__(self):
-        self.word2idx = {}
-        self.idx2word = []
-        self.wordCount = {}
+    def __init__(self, path):
+
+      # word to index lookup
+      self.word2idx = {}
+      # array of tokens
+      self.idx2word = []
+
+      # absolute counts
+      self.wordCount = {}
 
     def add_word(self, word):
         if word not in self.wordCount:
@@ -19,7 +28,7 @@ class Dictionary(object):
       actual_length = len(words)
 
       if nth_most_common > actual_length:
-        print ("Fewer unique tokens in set than limit", actual_length)
+        print ("Fewer unique tokens in set than limit:", actual_length)
         nth_most_common = actual_length - 1
 
       def getKey(word):
@@ -60,66 +69,182 @@ class Dictionary(object):
 
 class Corpus(object):
     def __init__(self, path):
-        self.dictionary = Dictionary()
-        self.train = self.tokenize(os.path.join(path, 'train.txt'))
-        self.valid = self.tokenize(os.path.join(path, 'valid.txt'))
-        self.test = self.tokenize(os.path.join(path, 'test.txt'))
+      self.dictionary = Dictionary(path)
 
+      indexed_lines = []
+
+      if os.path.exists(os.path.join(path, 'dictionary.json')):
+        # load dictionary
+        print("We should load the dictionary here")
+
+        with h5py.File(os.path.join(path, 'indexed.hdf'),'r') as f:
+          dset = f['indexes']
+          indexed_lines = torch.LongTensor(dset[...])
+
+        with open(os.path.join(path, 'dictionary.json'), 'r') as f:
+          self.dictionary.idx2word = json.load(f)
+
+        # self.train = self.tokenize(os.path.join(path, 'train.txt'))
+        # self.valid = self.tokenize(os.path.join(path, 'valid.txt'))
+        # self.test = self.tokenize(os.path.join(path, 'test.txt'))
+
+      else:
+        self.idx2forms = []
+        self.base2idx = {}
+        self.extended2idx = {}
+
+        self.loadStems(path)
+        tokens_lines = self.lines_to_tokens(path)
+        indexed_lines = self.index(tokens_lines)
+
+        cnt = len(indexed_lines)
+
+        with h5py.File(os.path.join(path, 'indexed.hdf'),'w') as f:
+          dset = f.create_dataset('indexes', (cnt,), dtype='int64')
+          dset[...] = indexed_lines.numpy()
+
+        with open(os.path.join(path, 'dictionary.json'), 'w') as f:
+          json.dump(self.dictionary.idx2word, f)
+
+      cnt = len(indexed_lines)
+      self.train = indexed_lines[0:math.floor(cnt*0.8)]
+      self.valid = indexed_lines[math.floor(cnt*0.8):math.floor(cnt*0.9)]
+      self.test = indexed_lines[math.floor(cnt*0.9):math.floor(cnt*1)]
+
+      # print(indexed_lines)
+      # self.train = indexed_lines
+      # self.valid = indexed_lines
+      # self.test = indexed_lines
+
+
+    def lines_to_tokens(self, path):
+      with open(os.path.join(path, 'data.txt'), 'r') as f:
+        print("Tokenizing")
+        tokenized_sentences = []
+
+        lineCnt = 0
+
+        for line in f:
+
+          # flatten punctuation
+          line = re.sub(r'(\W)(?=\1)', '', line).lower()
+
+          # convert to sentences
+          sentences = [sentence.strip() for sentence in re.split(r"[\.\!\?]\s|\w[\.\!\?]\w", line)]
+          sentences = list(filter(None, sentences))
+          sentences = [sentence + '.' if len(sentence) > 1 else sentence for sentence in sentences]
+
+          for sentence in sentences:
+            tokens = [self.subtokenize(token, []) for token in self.split(sentence)]
+
+            finalTokens = []
+
+            for token in tokens:
+              if len(token) == 1:
+                finalTokens += [token[0]]
+              else:
+                for subtoken in token:
+                  finalTokens += [subtoken]
+                  if subtoken != token[-1]:
+                    finalTokens += ['+']
+
+            tokenized_sentences.append(finalTokens)
+      return tokenized_sentences
+
+
+    def subtokenize(self, token, tokensFound):
+      if len(token) <= 2: return [token]
+
+      hits = []
+      # print('\n\nToken:', token)
+
+      for i in range(4, len(token) + 1):
+
+        if token[0:i] in self.extended2idx:
+          hits.append(i)
+          # print('-', token[0:i])
+
+      if len(hits) == 0:
+        tokensFound += [token]
+        # print('Terminated with:', tokensFound)
+
+      else:
+
+        # print ('hits:', hits)
+
+        if len(hits) >= 5:
+          # Find the last hit before gap. Possibly.
+          hit = hits[math.floor(len(hits)/2)]
+        else:
+          hit = hits[-1]
+
+        idx = self.extended2idx[token[0:hit]]
+        base, extended = self.idx2forms[idx]
+        # print ('forms: ', base, extended, self.idx2forms[idx])
+
+        # Chop up into stem and base if similar
+        if len(base) < len(extended) and extended.startswith(base):
+          tokensFound += [base, extended.replace(base,"")]
+        else:
+          tokensFound += [extended]
+
+        # print('Found:', tokensFound)
+
+        if hit < len(token):
+          # print('Recursing: ', token[hit:])
+          tokensFound += self.subtokenize(token[hit:], [])
+
+      return tokensFound
 
     def split(self, str):
       return re.findall(r"[\w']+|[~.,!?;]", str.lower())
 
-    def tokenize(self, path):
-        """Tokenizes a text file."""
-        assert os.path.exists(path)
-        # Add words to the dictionary
-        print("Building Dictionary")
-        with open(path, 'r') as f:
-            tokens = 0
-            for line in f:
-                words = self.split(line)
-                tokens += len(words)
-                for word in words:
-                    self.dictionary.add_word(word)
+    def index(self, tokenized_lines):
 
-        print("Pruning")
+      print("Counting")
 
-        self.dictionary.prune(30000)
-        # self.dictionary.prune(1000)
+      for line in tokenized_lines:
+        for word in line:
+          self.dictionary.add_word(word)
 
-        print("Tokenizing")
+      print("Found", len(self.dictionary.wordCount), "unique tokens.")
 
-        # Tokenize file content
+      print("Pruning to ", TOKENCOUNT)
 
-        with open(path, 'r') as f:
+      self.dictionary.prune(TOKENCOUNT)
 
-          token_ids = []
-          for line in f:
-            # print('--------------')
-            # print(line)
-            sentences = line.split('. ')
-            # print(sentences)
+      print("Making vector")
 
-            def filter_unknown(sentence):
-              words = self.split(sentence)
-              return self.dictionary.containsWords(words)
+      token_ids = []
 
-            sentences = filter(filter_unknown, sentences)
-            line = ". ".join(sentences)
+      for line in tokenized_lines:
 
-            # print(line)
+        if self.dictionary.containsWords(line):
+          for word in line:
+              token_ids.append(self.dictionary.word2idx[word])
 
-            words = self.split(line)
+      print('Length of token vector:', len(token_ids))
+      ids = torch.LongTensor(len(token_ids))
 
-            for word in words:
-                token_ids.append(self.dictionary.word2idx[word])
+      # wow, much ineffecicient
+      for i in range(len(token_ids)):
+        ids[i] = token_ids[i]
 
-          print('Number of tokens in total', len(token_ids))
-          ids = torch.LongTensor(len(token_ids))
+      return ids
 
-          # wow, much ineffecicient
-          for i in range(len(token_ids)):
-            ids[i] = token_ids[i]
+    def loadStems(self, path):
+      print("Loading morphemes")
+      with open(os.path.join(path, 'fullform_bm.txt'), 'r') as f:
+        for line in f:
+          columns = line.split("\t")
+          if len(columns) > 2:
+            base = columns[1]
+            extended = columns[2]
+            self.idx2forms.append([base, extended])
+            self.base2idx[base] = len(self.idx2forms) - 1
+            self.extended2idx[extended] = len(self.idx2forms) -1
 
 
-        return ids
+if __name__ == "__main__":
+   # stuff only to run when not called via 'import' here
+   Corpus('./data/local/')
