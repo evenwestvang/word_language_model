@@ -101,3 +101,91 @@ dropout=True <- RNN
 runs on slopoke
 
 *run_06*
+
+| epoch   1 | 127200/211018 batches | lr 20.00 | ms/batch 108.29 | loss  3.55 | ppl    34.70
+| epoch   1 | 127400/211018 batches | lr 20.00 | ms/batch 108.31 | loss  3.41 | ppl    30.41
+| epoch   1 | 127600/211018 batches | lr 20.00 | ms/batch 108.28 | loss  3.48 | ppl    32.62
+| epoch   1 | 127800/211018 batches | lr 20.00 | ms/batch 108.30 | loss 10.03 | ppl 22612.15
+| epoch   1 | 128000/211018 batches | lr 20.00 | ms/batch 108.30 | loss 10.11 | ppl 24509.49
+| epoch   1 | 128200/211018 batches | lr 20.00 | ms/batch 108.30 | loss 10.03 | ppl 22691.36
+| epoch   1 | 128400/211018 batches | lr 20.00 | ms/batch 108.27 | loss 10.19 | ppl 26627.73
+| epoch   1 | 128600/211018 batches | lr 20.00 | ms/batch 108.29 | loss 10.15 | ppl 25625.54
+| epoch   1 | 128800/211018 batches | lr 20.00 | ms/batch 108.29 | loss 10.36 | ppl 31485.66
+| epoch   1 | 129000/211018 batches | lr 20.00 | ms/batch 108.30 | loss 10.05 | ppl 23190.68
+| epoch   1 | 129200/211018 batches | lr 20.00 | ms/batch 108.29 | loss 10.24 | ppl 27943.45
+| epoch   1 | 129400/211018 batches | lr 20.00 | ms/batch 108.30 | loss 10.16 | ppl 25891.42
+| epoch   1 | 129600/211018 batches | lr 20.00 | ms/batch 108.29 | loss 10.29 | ppl 29370.16
+| epoch   1 | 129800/211018 batches | lr 20.00 | ms/batch 108.28 | loss 10.21 | ppl 27288.10
+| epoch   1 | 130000/211018 batches | lr 20.00 | ms/batch 108.32 | loss 10.17 | ppl 26043.73
+
+*run_07*
+
+Adding bias to LSTM. 0.3 dropout. only 2 layers 1024 hidden
+
+/usr/bin/python -u /word_language_model/main.py --data /corpus --model LSTM --nlayers 2 --nhid 1024 --epochs 10 --save /checkpoints/local_comments --emsize 300 --cuda
+
+even@slopoke:~$ docker attach 7f447e05946f
+| epoch   6 | 13600/211018 batches | lr 20.00 | ms/batch 32.14 | loss  3.41 | ppl    30.27
+| epoch   6 | 13800/211018 batches | lr 20.00 | ms/batch 32.14 | loss  3.40 | ppl    29.90
+
+temp 0.9:
+
+eller annet . . ~ ~ feil , idiotisk + e navn . ~ ~ jeg skjønner den , men
+den skulle utvikle + s . jeg vet veldig om jeg vet at politi + et bestem + mer seg
+, og at de ikke kan skrive noe om det så lenge der . ~ og så tro + r
+jeg viking starter promillegrense + n . at kil gir knapt uavgjort . ~ er det noen som er for
+faen ikke kan jo regne med at det lar seg gjøre å ha så mye å gjøre i nette +
+t for eksempel . du burde stå frem med full + t navn , som du solbrille + r på
+. her illustrere + r du lite av det du kalle + r for personangrep . jeg har ikke skjønt
+noe av det . det er normal + t velkjent for ham selv . det er rana blad som bestem
++ mer om han vil ta godt vare på dem det gjelder å vurdere . ~ ~ det er faktisk
+det de andre som forstå + r . er flau over at norske + ne har råd til å ville
+ta feil , men sko + ene kan være med på å kle enda , så det er de vel
+ikke . . ~ det har virkelig + hete + n klart en bane i åle + s + und
+oslo . ~ gratulere + r petter og de 5 3 3 3 år med å ha komme + t
+på ei bok under hver + t her . ~ å grense + n til ap s tid + er
+er det eneste unnskyldning for å avskaffe høyre . ~ og selvfølgelig av ambulanse + r , dyr , kirurg
++ er og folk alle sammen . ~ ler av problem + ene . . ~ kan jeg skjønne det
+igjen har jeg også sett . ~ det er på tide at du er rimelig sikker på at avinor har
+ta + tt de grep + ene . å så sitte + r du på benke + n du eier
+og leser om . ~ reiseliv + snæringen motta + r sterkt støtte fra nav . på tide at du
+til og med har lest sake + n . at du ikke ha + dde skjønt det samme , syntes
+kanskje det var dum + t av nav å starte opp en gudstjeneste + nfjorden , men der går det
+. ~ fokus + et er at ungdom + men som er i opposisjon , er på mobiltelefon . en
+ting er sikker + t og det er litt trist da . ~ å må da jaggu meg være gratulere
++ r det var ikke stor + e plass + en på kunde + n . ~ ~ rune ring
++ dal skrev 14 09 kl . 1 8 . det faktum lengre er at de aller rik + este
+i kulturliv + et i nordland har vente + t på at de skulle få tillat + else til å
+gjøre noe med årsak + ene . men , det finnes ikke et tema . en viktig ting på formue
++ n er at politiker + ne komme + r på bane + n og har tillit nok til å
+få støtte fra de idiot + ene som har makt men rest + en av by + en . ~
+her får du av båt + en . ~ kirke + n har valgt inn med grunnleggende religiøs + e
+rettighet + er . dette er sprøyte + r + o . ~ på grunn av frp stå + r
+dette . men vi har love + n i hode + n øst europeisk + e love + r er
+verst . vi får håpe vi gjør noe . ~ men er du ranværing . ~ ~ rita vet nøyaktig
+hva som er best ved å merke seg at vi nettopp har lengre åpningstid + er enn under byggestart .
+~ hvem er det som amundsen mene + r er fornuftig . for i rest + en av lokallag +
+ene . ~ hei frank johansen . ble det noe feil med deg også for 100 kr . jeg fant
+ut at jeg vil ha fortsatt ei . at ulv + en er blitt bare av en kultur synes jeg
+er dårlig og dobbelt så tåpelig som at de bli + r respektert når de hører om andre + s
+fare så bli + r helvete + n dårlig + ere . ~ det er ingen rett hvis enn har
+gjort oppmerksom på det bedre . ~ ingen kokke + ekspert + er som jobber med de hjemme bygge +
+t ut i by + en . dette gjør at fylke + s + fiska + hater + en må
+
+
+--
+
+*run_08*
+
+Huge network
+
+/usr/bin/python -u /word_language_model/main.py --data /corpus --model LSTM --nlayers 2 --nhid 4096 --epochs 10 --save /checkpoints/local_comments --emsize 300 --cuda
+
+Seems to saturate 1/10 of the way through the first epoch. Hm hm:
+
+ epoch   1 | 38800/302115 batches | lr 20.00 | ms/batch 286.78 | loss  3.26 | ppl    26.13
+
+Perhaps:
+
+- L1 regularitzation
+- Higher learning rate?

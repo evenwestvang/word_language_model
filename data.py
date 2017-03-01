@@ -4,7 +4,7 @@ import re
 import math
 import h5py, json
 
-TOKENCOUNT = 30000
+TOKENCOUNT = 50000
 
 class Dictionary(object):
     def __init__(self, path):
@@ -140,18 +140,17 @@ class Corpus(object):
 
           for sentence in sentences:
             tokens = [self.subtokenize(token, []) for token in self.split(sentence)]
-
             finalTokens = []
 
             for token in tokens:
               if len(token) == 1:
                 finalTokens += [token[0]]
               else:
+                # print(token)
                 for subtoken in token:
                   finalTokens += [subtoken]
                   if subtoken != token[-1]:
                     finalTokens += ['+']
-
             tokenized_sentences.append(finalTokens)
       return tokenized_sentences
 
@@ -174,13 +173,31 @@ class Corpus(object):
 
       else:
 
+        # print (token)
         # print ('hits:', hits)
 
-        if len(hits) >= 5:
-          # Find the last hit before gap. Possibly.
-          hit = hits[math.floor(len(hits)/2)]
+        firstWord = -1
+        wordBoundary = -1
+        # print ('\n', token, hits)
+        for i in range(len(hits)):
+          base, extended = self.idx2forms[self.extended2idx[token[0:hits[i]]]]
+          if firstWord == -1:
+            firstWord = base
+            # print (base, firstWord)
+          elif base != firstWord:
+            wordBoundary = i - 1
+            # print (base, firstWord)
+            break
+
+        hit = 0
+
+        if wordBoundary != -1:
+          hit = hits[wordBoundary]
         else:
-          hit = hits[-1]
+          if len(hits) >= 5:
+            hit = hits[math.floor(len(hits)/2)]
+          else:
+            hit = hits[-1]
 
         idx = self.extended2idx[token[0:hit]]
         base, extended = self.idx2forms[idx]
@@ -219,14 +236,19 @@ class Corpus(object):
 
       print("Making vector")
 
+      included = 0
+      discarded = 0
+
       token_ids = []
-
       for line in tokenized_lines:
-
         if self.dictionary.containsWords(line):
+          included += 1
           for word in line:
               token_ids.append(self.dictionary.word2idx[word])
+        else:
+          discarded += 1
 
+      print ('included / discarded', included, discarded)
       print('Length of token vector:', len(token_ids))
       ids = torch.LongTensor(len(token_ids))
 
