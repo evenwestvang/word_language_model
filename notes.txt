@@ -183,9 +183,37 @@ Huge network
 
 Seems to saturate 1/10 of the way through the first epoch. Hm hm:
 
- epoch   1 | 38800/302115 batches | lr 20.00 | ms/batch 286.78 | loss  3.26 | ppl    26.13
+| epoch   1 | 40400/302115 batches | lr 20.00 | ms/batch 286.72 | loss  3.31 | ppl    27.39
+| epoch   1 | 40600/302115 batches | lr 20.00 | ms/batch 286.81 | loss  3.26 | ppl    26.13
+| epoch   1 | 40800/302115 batches | lr 20.00 | ms/batch 286.74 | loss  3.36 | ppl    28.81
 
 Perhaps:
 
 - L1 regularitzation
 - Higher learning rate?
+
+
+*run_08*
+
+Small network to check baseline.
+
+/usr/bin/python -u /word_language_model/main.py --data /corpus --model LSTM --nlayers 2 --nhid 256 --epochs 10 --save /checkpoints/local_comments --emsize 200 --cuda
+
+| epoch   1 | 39600/302115 batches | lr 20.00 | ms/batch 16.37 | loss  3.71 | ppl    40.98
+| epoch   1 | 39800/302115 batches | lr 20.00 | ms/batch 16.38 | loss  3.66 | ppl    38.92
+
+FROM ABOVE
+
+- try doubling learning rate: FAIL
+
+/usr/bin/python -u /word_language_model/main.py --data /corpus --model LSTM --lr 40 --nlayers 2 --nhid 256 --epochs 10 --save /checkpoints/local_comments --emsize 200 --cuda
+
+doesn't work.
+
+- removing bias from LSTM: SAME : KEEP
+
+| epoch   1 | 47200/302115 batches | lr 20.00 | ms/batch 16.31 | loss  3.65 | ppl    38.48
+| epoch   1 | 47400/302115 batches | lr 20.00 | ms/batch 16.31 | loss  3.64 | ppl    38.00
+| epoch   1 | 47600/302115 batches | lr 20.00 | ms/batch 16.46 | loss  3.69 | ppl    40.03
+
+- moderately increase LR:
