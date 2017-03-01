@@ -8,8 +8,8 @@ class RNNModel(nn.Module):
     def __init__(self, rnn_type, ntoken, ninp, nhid, nlayers):
         super(RNNModel, self).__init__()
         # self.encoder = nn.Embedding(ntoken, ninp, scale_grad_by_freq=True)
-        self.encoder = nn.Embedding(ntoken, ninp)
-        self.rnn = getattr(nn, rnn_type)(ninp, nhid, nlayers, bias=False, dropout=0.2)
+        self.encoder = nn.Embedding(ntoken, ninp, scale_grad_by_freq=False)
+        self.rnn = getattr(nn, rnn_type)(ninp, nhid, nlayers, bias=False, dropout=0.3)
         # self.rnn = getattr(nn, rnn_type)(ninp, nhid, nlayers, bias=False)
         self.decoder = nn.Linear(nhid, ntoken)
 

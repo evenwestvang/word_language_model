@@ -1,1 +1,1 @@
-python generate.py --data /corpus --checkpoint /checkpoints/local_comments1.pt --temperature 1.2 --cuda
+python generate.py --data /corpus --checkpoint /checkpoints/local_comments1.pt --temperature 0.9 --cuda && cat generated.txt
