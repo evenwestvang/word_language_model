@@ -1,0 +1,8 @@
+Loading dictionary
+Number of tokens: 50000
+Embedding size: 200
+| epoch   1 |   200/302115 batches | lr 20.00 | ms/batch 129.89 | loss  7.06 | ppl  1164.23
+| epoch   1 |   400/302115 batches | lr 20.00 | ms/batch 127.81 | loss  6.40 | ppl   602.62
+| epoch   1 |   600/302115 batches | lr 20.00 | ms/batch 127.81 | loss  5.59 | ppl   266.56
+| epoch   1 |   800/302115 batches | lr 20.00 | ms/batch 127.79 | loss  5.15 | ppl   172.65
+| epoch   1 |  1000/302115 batches | lr 20.00 | ms/batch 127.82 | loss  4.86 | ppl   129.40

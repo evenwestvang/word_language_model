@@ -128,17 +128,18 @@ def train():
     start_time = time.time()
     ntokens = len(corpus.dictionary)
     hidden = model.init_hidden(args.batch_size)
-    prev_val_loss = None
     for batch, i in enumerate(range(0, train_data.size(0) - 1, args.bptt)):
 
         global lr
+        global prev_val_loss
 
-        if i % 10000 == 0 and i > 0:
+        if batch % 40000 == 0 and i > 0:
           print('Annealing the learning rate.')
           val_loss = evaluate(val_data)
+          print('Evaluated loss. Current:', val_loss, 'Previous:', prev_val_loss)
           if prev_val_loss and val_loss > prev_val_loss:
             lr /= 4
-            prev_val_loss = val_loss
+          prev_val_loss = val_loss
 
         data, targets = get_batch(train_data, i)
         hidden = repackage_hidden(hidden)
