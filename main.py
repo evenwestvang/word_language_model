@@ -2,6 +2,7 @@ import argparse
 import time
 import math
 import torch
+import stathat
 import torch.nn as nn
 from torch.autograd import Variable
 
@@ -37,6 +38,7 @@ parser.add_argument('--log-interval', type=int, default=200, metavar='N',
                     help='report interval')
 parser.add_argument('--save', type=str,  default='model',
                     help='path to save the final model')
+
 args = parser.parse_args()
 
 # Set the random seed manually for reproducibility.
@@ -137,8 +139,10 @@ def train():
           print('Annealing the learning rate.')
           val_loss = evaluate(val_data)
           print('Evaluated loss. Current:', val_loss, 'Previous:', prev_val_loss)
+          stathat.ez_post_value('even@bengler.no', 'validated_loss', val_loss)
           if prev_val_loss and val_loss > prev_val_loss:
             lr /= 4
+            stathat.ez_post_value('even@bengler.no', 'word_learning_rate', lr)
           prev_val_loss = val_loss
 
         data, targets = get_batch(train_data, i)
@@ -157,6 +161,7 @@ def train():
         if batch % args.log_interval == 0 and batch > 0:
             cur_loss = total_loss[0] / args.log_interval
             elapsed = time.time() - start_time
+            stathat.ez_post_value('even@bengler.no', 'word_loss', cur_loss)
             print('| epoch {:3d} | {:5d}/{:5d} batches | lr {:02.2f} | ms/batch {:5.2f} | '
                     'loss {:5.2f} | ppl {:8.2f}'.format(
                 epoch, batch, len(train_data) // args.bptt, lr,
@@ -178,6 +183,7 @@ for epoch in range(1, args.epochs+1):
                                        val_loss, math.exp(val_loss)))
     print('-' * 89)
     # Anneal the learning rate.
+    stathat.ez_post_value('even@bengler.no', 'validated_loss', val_loss)
     if prev_val_loss and val_loss > prev_val_loss:
         lr /= 4
     prev_val_loss = val_loss
