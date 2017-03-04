@@ -143,7 +143,7 @@ def train():
           print('Evaluated loss. Current:', val_loss, 'Previous:', prev_val_loss)
           stats.value('validated_loss', val_loss)
 
-          if prev_val_loss and val_loss => prev_val_loss:
+          if prev_val_loss and val_loss >= prev_val_loss:
             lr /= 4
             stats.value('word_learning_rate', lr)
           prev_val_loss = val_loss
