@@ -8,6 +8,7 @@
 import argparse
 import time
 import math
+import re
 
 import torch
 import torch.nn as nn
@@ -59,10 +60,15 @@ corpus = data.Corpus(args.data)
 ntokens = len(corpus.dictionary)
 hidden = model.init_hidden(1)
 input = Variable(torch.rand(1, 1).mul(ntokens).long(), volatile=True)
+print(input)
+
 if args.cuda:
     input.data = input.data.cuda()
 
+
 with open(args.outf, 'w', encoding="utf-8") as outf:
+    out_file = ''
+
     for i in range(args.words):
         output, hidden = model(input, hidden)
         word_weights = output.squeeze().data.div(args.temperature).exp().cpu()
@@ -70,7 +76,13 @@ with open(args.outf, 'w', encoding="utf-8") as outf:
         input.data.fill_(word_idx)
         word = corpus.dictionary.idx2word[word_idx]
 
-        outf.write(word + ('\n' if i % 20 == 19 else ' '))
+        out_file += word + ' '
 
         if i % args.log_interval == 0:
             print('| Generated {}/{} words'.format(i, args.words))
+
+    out_file = re.sub(r'(\s\+\s)', '', out_file)
+    out_file = re.sub(r'~\s', '\n\n', out_file)
+    out_file = re.sub(r'\s\.\s', '. ', out_file)
+    out_file = re.sub(r'\s,\s', '. ', out_file)
+    outf.write(out_file)
