@@ -107,9 +107,9 @@ class Corpus(object):
           json.dump(self.dictionary.idx2word, f)
 
       cnt = len(indexed_lines)
-      self.train = indexed_lines[0:math.floor(cnt*0.8)]
-      self.valid = indexed_lines[math.floor(cnt*0.8):math.floor(cnt*0.9)]
-      self.test = indexed_lines[math.floor(cnt*0.9):math.floor(cnt*1)]
+      self.train = indexed_lines[0:math.floor(cnt*0.9)]
+      self.valid = indexed_lines[math.floor(cnt*0.9):math.floor(cnt*0.95)]
+      self.test = indexed_lines[math.floor(cnt*0.95):math.floor(cnt*1)]
 
       # print(indexed_lines)
       # self.train = indexed_lines

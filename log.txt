@@ -1,3 +1,0 @@
-Loading dictionary
-Number of tokens: 50000
-Embedding size: 200

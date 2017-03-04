@@ -1,1 +1,1 @@
-python -u main.py --data ../corpus --model LSTM --nlayers 3 --nhid 2048 --epochs 10 --save ../checkpoints/local_comments --emsize 200 --cuda --lr 20 > log.txt
+python -u main.py --data ../corpus --model LSTM --nlayers 2 --nhid 4096 --epochs 12 --save ../checkpoints/local_comments --emsize 450 --cuda --lr 20 > log.txt
