@@ -3,6 +3,8 @@ import torch
 import re
 import math
 import h5py, json
+from pprint import pprint
+from splitter import split_line_sentences_words
 
 TOKENCOUNT = 50000
 
@@ -31,6 +33,7 @@ class Dictionary(object):
         print ("Fewer unique tokens in set than limit:", actual_length)
         nth_most_common = actual_length - 1
 
+
       def getKey(word):
         return self.wordCount[word]
 
@@ -55,7 +58,6 @@ class Dictionary(object):
 
       # print(self.word2idx)
 
-
     def containsWords(self, wordArray):
       # print (wordArray)
       for word in wordArray:
@@ -73,7 +75,7 @@ class Corpus(object):
 
       indexed_lines = []
 
-      if os.path.exists(os.path.join(path, 'dictionary.json')):
+      if False: # os.path.exists(os.path.join(path, 'dictionary.json')):
         # load dictionary
         print("Loading dictionary")
 
@@ -84,17 +86,9 @@ class Corpus(object):
         with open(os.path.join(path, 'dictionary.json'), 'r') as f:
           self.dictionary.idx2word = json.load(f)
 
-        # self.train = self.tokenize(os.path.join(path, 'train.txt'))
-        # self.valid = self.tokenize(os.path.join(path, 'valid.txt'))
-        # self.test = self.tokenize(os.path.join(path, 'test.txt'))
-
       else:
-        self.idx2forms = []
-        self.base2idx = {}
-        self.extended2idx = {}
 
-        self.loadStems(path)
-        tokens_lines = self.lines_to_tokens(path)
+        tokens_lines = self.corpus_to_tokens(path)
         indexed_lines = self.index(tokens_lines)
 
         cnt = len(indexed_lines)
@@ -111,134 +105,43 @@ class Corpus(object):
       self.valid = indexed_lines[math.floor(cnt*0.9):math.floor(cnt*0.95)]
       self.test = indexed_lines[math.floor(cnt*0.95):math.floor(cnt*1)]
 
-      # print(indexed_lines)
-      # self.train = indexed_lines
-      # self.valid = indexed_lines
-      # self.test = indexed_lines
 
-
-    def lines_to_tokens(self, path):
+    def corpus_to_tokens(self, path):
       with open(os.path.join(path, 'data.txt'), 'r', encoding="utf-8") as f:
         print("Tokenizing")
         tokenized_sentences = []
-
         lineCnt = 0
 
         for line in f:
 
           lineCnt += 1
-          # if lineCnt > 300:
-          #   break
-
-          # flatten punctuation
-          line = re.sub(r'(\W)(?=\1)', '', line).lower()
-
-          # convert to sentences
-          sentences = [sentence.strip() for sentence in re.split(r"[\.\!\?]\s|\w[\.\!\?]\w", line)]
-          sentences = list(filter(None, sentences))
-          sentences = [sentence + '.' if len(sentence) > 1 else sentence for sentence in sentences]
-
-          for sentence in sentences:
-            tokens = [self.subtokenize(token, []) for token in self.split(sentence)]
-            finalTokens = []
-
-            for token in tokens:
-              if len(token) == 1:
-                finalTokens += [token[0]]
-              else:
-                # print(token)
-                for subtoken in token:
-                  finalTokens += [subtoken]
-                  if subtoken != token[-1]:
-                    finalTokens += ['+']
-            tokenized_sentences.append(finalTokens)
-      return tokenized_sentences
-
-
-    def subtokenize(self, token, tokensFound):
-      if len(token) <= 2: return [token]
-
-      hits = []
-      # print('\n\nToken:', token)
-
-      for i in range(4, len(token) + 1):
-
-        if token[0:i] in self.extended2idx:
-          hits.append(i)
-          # print('-', token[0:i])
-
-      if len(hits) == 0:
-        tokensFound += [token]
-        # print('Terminated with:', tokensFound)
-
-      else:
-
-        # print (token)
-        # print ('hits:', hits)
-
-        firstWord = -1
-        wordBoundary = -1
-        # print ('\n', token, hits)
-        for i in range(len(hits)):
-          base, extended = self.idx2forms[self.extended2idx[token[0:hits[i]]]]
-          if firstWord == -1:
-            firstWord = base
-            # print (base, firstWord)
-          elif base != firstWord:
-            wordBoundary = i - 1
-            # print (base, firstWord)
+          if lineCnt > 8000:
             break
 
-        hit = 0
+          # flatten punctuation
+          line = line.lower()
 
-        if wordBoundary != -1:
-          hit = hits[wordBoundary]
-        else:
-          if len(hits) >= 5:
-            hit = hits[math.floor(len(hits)/2)]
-          else:
-            hit = hits[-1]
+          tokenized_sentences += split_line_sentences_words(line)
 
-        idx = self.extended2idx[token[0:hit]]
-        base, extended = self.idx2forms[idx]
-        # print ('forms: ', base, extended, self.idx2forms[idx])
-
-        # Chop up into stem and base if similar
-        if len(base) < len(extended) and extended.startswith(base):
-          tokensFound += [base, extended.replace(base,"")]
-        else:
-          tokensFound += [extended]
-
-        # print('Found:', tokensFound)
-
-        if hit < len(token):
-          # print('Recursing: ', token[hit:])
-          tokensFound += self.subtokenize(token[hit:], [])
-
-      return tokensFound
+      return tokenized_sentences
 
     def split(self, str):
-      return re.findall(r"[\w']+|[~.,!?;]", str.lower())
+      return re.findall(r"[\w']+|[~.,!?;]", str)
 
     def index(self, tokenized_lines):
 
       print("Counting")
-
       for line in tokenized_lines:
         for word in line:
           self.dictionary.add_word(word)
 
       print("Found", len(self.dictionary.wordCount), "unique tokens.")
-
       print("Pruning to ", TOKENCOUNT)
 
       self.dictionary.prune(TOKENCOUNT)
-
       print("Making vector")
-
       included = 0
       discarded = 0
-
       token_ids = []
       for line in tokenized_lines:
         if self.dictionary.containsWords(line):
@@ -250,25 +153,12 @@ class Corpus(object):
 
       print ('included / discarded', included, discarded)
       print('Length of token vector:', len(token_ids))
-      ids = torch.LongTensor(len(token_ids))
-
+      print('Building tensor')
       # wow, much ineffecicient
+      ids = torch.LongTensor(len(token_ids))
       for i in range(len(token_ids)):
         ids[i] = token_ids[i]
-
       return ids
-
-    def loadStems(self, path):
-      print("Loading morphemes")
-      with open(os.path.join(path, 'fullform_bm.txt'), 'r', encoding="utf-8") as f:
-        for line in f:
-          columns = line.split("\t")
-          if len(columns) > 2:
-            base = columns[1]
-            extended = columns[2]
-            self.idx2forms.append([base, extended])
-            self.base2idx[base] = len(self.idx2forms) - 1
-            self.extended2idx[extended] = len(self.idx2forms) -1
 
 
 if __name__ == "__main__":

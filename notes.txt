@@ -217,3 +217,16 @@ doesn't work.
 | epoch   1 | 47600/302115 batches | lr 20.00 | ms/batch 16.46 | loss  3.69 | ppl    40.03
 
 - moderately increase LR:
+nah
+
+- try to ditch LR more often
+
+-------------------
+
+two day run is way too long, can't see detailed logging
+
+/usr/bin/python -u /word_language_model/main.py --data /corpus --model LSTM --nlayers 2 --nhid 3000 --epochs 10 --save /checkpoints/local_comments --emsize 450 --cuda
+
+validated loss: 2.92 after 4 days
+
+found html literals and HTML in files
