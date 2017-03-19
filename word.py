@@ -35,7 +35,7 @@ class WordNode(object):
     if (length == len(processor.word)):
       self.done = True
       # print('done! – ', self.sequence)
-      self.score *= len(self.sequence)
+      self.score += (self.score * len(self.sequence)) * 0.1
 
       processor.addSolve([self.sequence, self.score])
       return
@@ -43,24 +43,24 @@ class WordNode(object):
       self.done = False
 
     has_hits = False
+
+    def scoreWord(length):
+      if length > 4:
+        length -= (length - 4)
+      return length ** 4
+
     for hit in processor.hits:
 
-      has_hits = True
-
       if hit[WordNode.START] == length:
+        has_hits = True
 
-        if hit[WordNode.BINGO]:
-          # reward longer words with stems
-          new_score = self.score + hit[WordNode.LENGTH] ** 2.5
+        if hit[WordNode.BINGO] and length + hit[WordNode.LENGTH] == len(processor.word):
+          new_score = self.score + (scoreWord(hit[WordNode.LENGTH]) * 2)
+          # print('bingo', new_score)
           new_sequence = sequence + [hit[WordNode.BASE_FORM], hit[WordNode.ENDING] ]
           self.newChild(new_sequence, new_score)
         else:
-          # penalty for very short sequences
-
-          if hit[WordNode.LENGTH] > 2:
-            new_score = self.score + hit[WordNode.LENGTH] ** 2
-          else:
-            new_score = self.score + hit[WordNode.LENGTH]
+          new_score = self.score + scoreWord(hit[WordNode.LENGTH])
 
           new_sequence = sequence + [hit[WordNode.EXTENDED_FORM]]
           self.newChild(new_sequence, new_score)
@@ -70,11 +70,12 @@ class WordNode(object):
     if not has_hits:
       char = processor.word[length]
       new_sequence = sequence + [char]
-      new_score = self.score - 0.5
+      new_score = (self.score * 0.2) - 140
       self.newChild(new_sequence, new_score)
 
   def newChild(self, new_sequence, base_score):
     # add extra point for filling up sentence
+    # print(new_sequence, base_score)
     self.children.append(WordNode(self.processor, new_sequence, base_score))
 
   def calc_length(self):
@@ -83,14 +84,13 @@ class WordNode(object):
       cnt += len(token)
     return cnt
 
-
-
-
 class Processor(object):
 
   idx2forms = []
   base2idx = {}
   extended2idx = {}
+
+  solveCache = {}
 
   def __init__(self, word):
     self.solves = []
@@ -100,21 +100,33 @@ class Processor(object):
     if self.word == '':
       return []
 
-    print('word up "' + self.word + '"')
+    if self.word in Processor.solveCache:
+      # print('cache hit "' + self.word + '"')
+      return Processor.solveCache[self.word]
+
+    # print('new word up "' + self.word + '"')
 
     self.hits = self.partitionWord(self.word)
+    # pprint(self.hits)
+
+    if len(self.hits) == 0:
+      return self.word
+
     WordNode(self, [], 1)
 
     self.solves.sort(key=lambda x:x[1])
     self.solves.reverse()
-    print(self.solves)
+
+    # print(self.solves[0:20])
+
+    solve = self.solves[0][0]
+    Processor.solveCache[self.word] = solve
+    return solve
 
   def addSolve(self, sequence):
     self.solves.append(sequence)
 
   def partitionWord(self, word):
-
-    if len(word) <= 3: return [word]
 
     hits = []
 
@@ -136,8 +148,6 @@ class Processor(object):
 
           hits.append([i, j - 1, abs(i-j), bingo, base, extended, ending, bingo])
           # print('-', token[0:i])
-
-    # pprint (hits)
 
     return hits
 

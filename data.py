@@ -33,7 +33,6 @@ class Dictionary(object):
         print ("Fewer unique tokens in set than limit:", actual_length)
         nth_most_common = actual_length - 1
 
-
       def getKey(word):
         return self.wordCount[word]
 
@@ -114,9 +113,9 @@ class Corpus(object):
 
         for line in f:
 
-          lineCnt += 1
-          if lineCnt > 8000:
-            break
+          # lineCnt += 1
+          # if lineCnt > 8000:
+          #   break
 
           # flatten punctuation
           line = line.lower()
@@ -125,8 +124,6 @@ class Corpus(object):
 
       return tokenized_sentences
 
-    def split(self, str):
-      return re.findall(r"[\w']+|[~.,!?;]", str)
 
     def index(self, tokenized_lines):
 
@@ -162,5 +159,4 @@ class Corpus(object):
 
 
 if __name__ == "__main__":
-   # stuff only to run when not called via 'import' here
    Corpus('./data/local/')
