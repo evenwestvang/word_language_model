@@ -113,13 +113,14 @@ class Corpus(object):
 
         for line in f:
 
-          # lineCnt += 1
+          lineCnt += 1
+          if lineCnt % 500 == 0:
+            print('- At line ', lineCnt)
           # if lineCnt > 8000:
           #   break
 
           # flatten punctuation
           line = line.lower()
-
           tokenized_sentences += split_line_sentences_words(line)
 
       return tokenized_sentences

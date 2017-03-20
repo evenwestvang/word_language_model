@@ -33,14 +33,18 @@ class WordNode(object):
     # print('len',length)
 
     if (length == len(processor.word)):
-      self.done = True
       # print('done! – ', self.sequence)
       self.score += (self.score * len(self.sequence)) * 0.1
 
       processor.addSolve([self.sequence, self.score])
       return
-    else:
-      self.done = False
+
+    if (len(self.sequence) > 8):
+      # print('done! – ', self.sequence)
+      self.score *= 0.5
+      self.sequence += processor.word[length:]
+      processor.addSolve([self.sequence, self.score])
+      return
 
     has_hits = False
 
@@ -121,6 +125,11 @@ class Processor(object):
 
     solve = self.solves[0][0]
     Processor.solveCache[self.word] = solve
+
+    if len(Processor.solveCache) % 500 == 0:
+      print('- Word solve cache at ', len(Processor.solveCache))
+      # print(Processor.solveCache)
+
     return solve
 
   def addSolve(self, sequence):

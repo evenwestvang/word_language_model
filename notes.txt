@@ -230,3 +230,13 @@ two day run is way too long, can't see detailed logging
 validated loss: 2.92 after 4 days
 
 found html literals and HTML in files
+
+----
+
+fixed errors. new tokeniser. running this overnight:
+
+/usr/bin/python -u /word_language_model/main.py --data /corpus --model LSTM --nlayers 2 --nhid 1024 --epochs 10 --save /checkpoints/local_comments --emsize 500 --cuda
+
+----
+
+Nah. We're chewing through 128Gb RAM on the tokenizer

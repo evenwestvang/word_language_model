@@ -28,12 +28,12 @@ def split_line_sentences_words(line):
       sentence += addWord(line[lastWord:i])
       lastWord = i + 1
     elif end_of_sentence.search(char):
-      if i < len(line) -1 and whitespace.search(line[i + 1]):
-        sentence += addWord(line[lastWord:i])
-        sentence.append(char)
-        sentences.append(list(filter(None, sentence)))
-        lastWord = i + 1
-        sentence = []
+      # if i < len(line) -1 and whitespace.search(line[i + 1]):
+      sentence += addWord(line[lastWord:i])
+      sentence.append(char)
+      sentences.append(list(filter(None, sentence)))
+      lastWord = i + 1
+      sentence = []
     elif nonAlphaNumeric.search(char):
       if lastWord < i:
         sentence += addWord(line[lastWord:i])
